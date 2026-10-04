@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1b1b1f">
+<title>PrintPad</title>
+<style>
+  :root {
+    --bg: #f2f2f5;
+    --panel: #ffffff;
+    --text: #1b1b1f;
+    --muted: #6b6b73;
+    --accent: #2b6ef2;
+    --border: #d9d9df;
+    --danger: #d23b3b;
+    --success: #1f9254;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15151a;
+      --panel: #1f1f26;
+      --text: #f0f0f5;
+      --muted: #9797a3;
+      --accent: #5b9bff;
+      --border: #33333d;
+      --danger: #ff6b6b;
+      --success: #3ddc84;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 12px 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  h1 {
+    font-size: 20px;
+    margin: 8px 0 12px;
+    text-align: center;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 9px;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .tbtn {
+    min-width: 42px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 15px;
+  }
+  .tbtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  select.tbtn { -webkit-appearance: none; appearance: none; }
+
+  .rotateRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 2px 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .rotateRow input { width: 18px; height: 18px; }
+
+  .editor {
+    width: 384px;
+    max-width: 100%;
+    min-height: 140px;
+    margin: 0 auto 12px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: -apple-system, Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.25;
+    outline: none;
+    overflow-wrap: break-word;
+  }
+  .editor:empty:before {
+    content: attr(data-placeholder);
+    color: #999;
+    pointer-events: none;
+  }
+  .editor div { min-height: 1em; }
+
+  .imgPreviewWrap {
+    width: 100%;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+  .imgPreviewWrap img { max-width: 100%; display: block; }
+
+  input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .primaryBtn {
+    flex: 1;
+    height: 48px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .primaryBtn:disabled { opacity: 0.5; }
+  .stopBtn {
+    height: 48px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .status {
+    margin-top: 10px;
+    font-size: 14px;
+    min-height: 18px;
+  }
+  .status.success { color: var(--success); }
+  .status.error { color: var(--danger); }
+  .status.sending { color: var(--muted); }
+
+  .settingsPanel label {
+    display: block;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .settingsPanel input[type="text"] {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+  }
+  .hint {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .secondaryBtn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    font-size: 15px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>PrintPad</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="text">Text</button>
+    <button class="tab-btn" data-tab="image">Image</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <section id="tab-text" class="tab-panel active">
+    <div class="toolbar">
+      <button id="boldBtn" class="tbtn"><b>B</b></button>
+      <select id="sizeSelect" class="tbtn">
+        <option value="0.5">.5x</option>
+        <option value="1" selected>1x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+        <option value="4">4x</option>
+      </select>
+      <button id="alignLeftBtn" class="tbtn">Left</button>
+      <button id="alignCenterBtn" class="tbtn">Ctr</button>
+      <button id="alignRightBtn" class="tbtn">Right</button>
+    </div>
+    <label class="rotateRow"><input type="checkbox" id="rotateText"> Rotate (long label, reads down the strip)</label>
+    <div id="editor" class="editor" contenteditable="true" data-placeholder="Type here..."></div>
+    <div class="actions">
+      <button id="printTextBtn" class="primaryBtn">Print</button>
+      <button id="stopTextBtn" class="stopBtn" hidden>Stop</button>
+    </div>
+    <div id="textStatus" class="status"></div>
+  </section>
+
+  <section id="tab-image" class="tab-panel">
+    <input type="file" id="imageInput" accept="image/*">
+    <div class="imgPreviewWrap"><img id="imgPreview" style="display:none;"></div>
+    <label class="rotateRow"><input type="checkbox" id="rotateImage"> Rotate 90°</label>
+    <div class="actions">
+      <button id="printImageBtn" class="primaryBtn">Print</button>
+      <button id="stopImageBtn" class="stopBtn" hidden>Stop</button>
+    </div>
+    <div id="imageStatus" class="status"></div>
+  </section>
+
+  <section id="tab-settings" class="tab-panel settingsPanel">
+    <label>Printer bridge address
+      <input type="text" id="hostInput" placeholder="192.168.4.36" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </label>
+    <button id="testConnBtn" class="secondaryBtn">Test connection</button>
+    <div id="settingsStatus" class="status"></div>
+    <p class="hint">
+      Your phone must be on the same WiFi network as the ESP32 printer bridge.
+      If "Print" fails with a network/mixed-content error, see the note below.
+    </p>
+    <p class="hint">
+      This page is served over HTTPS (GitHub Pages), but the printer bridge only speaks plain HTTP
+      on your local network. Some mobile browsers block that call for security reasons ("mixed content").
+      If printing fails here, open <code>http://&lt;bridge address&gt;/</code> directly in your phone's
+      browser instead of this github.io link — loading the tool from the bridge's own address avoids
+      the HTTPS/HTTP mismatch entirely.
+    </p>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Settings ----------
+  const hostInput = document.getElementById('hostInput');
+  const DEFAULT_HOST = '192.168.4.36';
+  function getHost() {
+    return (hostInput.value || DEFAULT_HOST).trim();
+  }
+  hostInput.value = localStorage.getItem('printpad_host') || DEFAULT_HOST;
+  hostInput.addEventListener('input', () => {
+    localStorage.setItem('printpad_host', hostInput.value.trim());
+  });
+
+  document.getElementById('testConnBtn').addEventListener('click', async () => {
+    const el = document.getElementById('settingsStatus');
+    el.textContent = 'Testing...';
+    el.className = 'status sending';
+    try {
+      const resp = await fetch(`http://${getHost()}/`, { method: 'GET' });
+      const text = await resp.text();
+      el.textContent = `OK: ${text.trim()}`;
+      el.className = 'status success';
+    } catch (e) {
+      el.textContent = 'Failed: ' + (e.message || 'network error');
+      el.className = 'status error';
+    }
+  });
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- Printer constants ----------
+  const PRINTER_WIDTH_DOTS = 384;
+  const ROTATE_WRAP_BUDGET = 1600; // generous virtual width for rotated-label wrapping
+  const SIZE_PX = { 0.5: 14, 1: 20, 2: 34, 3: 48, 4: 62 };
+  function sizePx(mult) { return SIZE_PX[mult] || SIZE_PX[1]; }
+
+  // ---------- Rich text editor ----------
+  const editor = document.getElementById('editor');
+  try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch (e) {}
+
+  const boldBtn = document.getElementById('boldBtn');
+  const sizeSelect = document.getElementById('sizeSelect');
+  const alignLeftBtn = document.getElementById('alignLeftBtn');
+  const alignCenterBtn = document.getElementById('alignCenterBtn');
+  const alignRightBtn = document.getElementById('alignRightBtn');
+
+  boldBtn.addEventListener('click', () => {
+    editor.focus();
+    try { document.execCommand('bold'); } catch (e) {}
+  });
+  alignLeftBtn.addEventListener('click', () => { editor.focus(); try { document.execCommand('justifyLeft'); } catch (e) {} });
+  alignCenterBtn.addEventListener('click', () => { editor.focus(); try { document.execCommand('justifyCenter'); } catch (e) {} });
+  alignRightBtn.addEventListener('click', () => { editor.focus(); try { document.execCommand('justifyRight'); } catch (e) {} });
+
+  function wrapRangeWithSize(range, mult) {
+    const span = document.createElement('span');
+    span.dataset.size = mult;
+    span.style.fontSize = sizePx(mult) + 'px';
+    const content = range.extractContents();
+    span.appendChild(content);
+    range.insertNode(span);
+    const sel = window.getSelection();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+  }
+
+  function applySizeAtCaret(mult) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    if (!range.collapsed) {
+      wrapRangeWithSize(range, mult);
+    } else {
+      const span = document.createElement('span');
+      span.dataset.size = mult;
+      span.style.fontSize = sizePx(mult) + 'px';
+      span.appendChild(document.createTextNode('​'));
+      range.insertNode(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.firstChild, 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    }
+    editor.focus();
+  }
+
+  sizeSelect.addEventListener('change', () => {
+    applySizeAtCaret(parseFloat(sizeSelect.value));
+  });
+
+  // ---------- DOM walk: editor -> paragraphs of tokens ----------
+  function isBoldAt(el) {
+    while (el && el !== editor) {
+      if (el.tagName === 'B' || el.tagName === 'STRONG') return true;
+      if (el.style && el.style.fontWeight) {
+        const fw = el.style.fontWeight;
+        if (fw === 'bold' || parseInt(fw, 10) >= 600) return true;
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+  function getSizeAt(el) {
+    while (el && el !== editor) {
+      if (el.dataset && el.dataset.size) return parseFloat(el.dataset.size);
+      el = el.parentElement;
+    }
+    return 1;
+  }
+  function getAlignAt(el) {
+    let cur = el;
+    while (cur) {
+      if (cur.style && cur.style.textAlign) return cur.style.textAlign;
+      if (cur === editor) break;
+      cur = cur.parentElement;
+    }
+    return 'left';
+  }
+
+  function extractTokensFromParagraph(paraEl) {
+    const align = getAlignAt(paraEl);
+    const tokens = [];
+    function recurse(node) {
+      if (node.nodeType === 3) {
+        const text = node.textContent.replace(/​/g, '');
+        if (text.length === 0) return;
+        const bold = isBoldAt(node.parentElement);
+        const size = getSizeAt(node.parentElement);
+        const parts = text.match(/\S+|\s+/g) || [];
+        for (const p of parts) tokens.push({ text: p, bold, size, isSpace: /^\s+$/.test(p) });
+      } else if (node.nodeType === 1) {
+        if (node.tagName === 'BR') { tokens.push({ text: '\n', bold: false, size: 1, isSpace: false, isBreak: true }); return; }
+        for (const child of Array.from(node.childNodes)) recurse(child);
+      }
+    }
+    for (const child of Array.from(paraEl.childNodes)) recurse(child);
+    return { align, tokens };
+  }
+
+  function walkEditor() {
+    const children = Array.from(editor.childNodes);
+    if (children.length === 0) return [];
+    const allDivs = children.every(c => c.nodeType === 1 && c.tagName === 'DIV');
+    if (allDivs) {
+      return children.map(extractTokensFromParagraph);
+    }
+    return [extractTokensFromParagraph(editor)];
+  }
+
+  // ---------- Text layout + rasterize ----------
+  const measureCanvas = document.createElement('canvas');
+  const mctx = measureCanvas.getContext('2d');
+  function fontStr(bold, size) {
+    return (bold ? 'bold ' : '') + sizePx(size) + 'px -apple-system, Helvetica, Arial, sans-serif';
+  }
+  function lineHeightFor(size) { return Math.round(sizePx(size) * 1.3); }
+
+  function buildLines(paragraphs, wrapWidth) {
+    const lines = [];
+    for (const para of paragraphs) {
+      let curTokens = [];
+      const pushLine = () => {
+        while (curTokens.length && curTokens[curTokens.length - 1].isSpace) curTokens.pop();
+        const h = curTokens.length ? Math.max(...curTokens.map(t => lineHeightFor(t.size))) : lineHeightFor(1);
+        lines.push({ tokens: curTokens, align: para.align, height: h });
+        curTokens = [];
+      };
+      let curWidth = 0;
+      for (const tok of para.tokens) {
+        if (tok.isBreak) { pushLine(); curWidth = 0; continue; }
+        mctx.font = fontStr(tok.bold, tok.size);
+        const w = mctx.measureText(tok.text).width;
+        if (tok.isSpace) {
+          if (curTokens.length === 0) continue;
+          if (curWidth + w > wrapWidth) { pushLine(); curWidth = 0; continue; }
+          curTokens.push(tok); curWidth += w;
+          continue;
+        }
+        if (w > wrapWidth) {
+          if (curTokens.length) { pushLine(); curWidth = 0; }
+          let remaining = tok.text;
+          while (remaining.length) {
+            let lo = 1, hi = remaining.length, best = 1;
+            while (lo <= hi) {
+              const mid = (lo + hi) >> 1;
+              const piece = remaining.slice(0, mid) + (mid < remaining.length ? '-' : '');
+              mctx.font = fontStr(tok.bold, tok.size);
+              if (mctx.measureText(piece).width <= wrapWidth) { best = mid; lo = mid + 1; } else hi = mid - 1;
+            }
+            const hasMore = best < remaining.length;
+            const pieceText = remaining.slice(0, best) + (hasMore ? '-' : '');
+            lines.push({ tokens: [{ text: pieceText, bold: tok.bold, size: tok.size, isSpace: false }], align: para.align, height: lineHeightFor(tok.size) });
+            remaining = remaining.slice(best);
+          }
+          continue;
+        }
+        if (curWidth + w > wrapWidth && curTokens.length) { pushLine(); curWidth = 0; }
+        curTokens.push(tok); curWidth += w;
+      }
+      pushLine();
+    }
+    return lines;
+  }
+
+  function measureLineWidth(line) {
+    let w = 0;
+    for (const t of line.tokens) {
+      mctx.font = fontStr(t.bold, t.size);
+      w += mctx.measureText(t.text).width;
+    }
+    return w;
+  }
+
+  function renderTextToBitmap(paragraphs, wrapWidth, mode) {
+    const lines = buildLines(paragraphs, wrapWidth);
+    const lineWidths = lines.map(measureLineWidth);
+    const totalHeight = Math.max(1, lines.reduce((s, l) => s + l.height, 0));
+    const width = mode === 'tight' ? Math.max(1, Math.ceil(Math.max(1, ...lineWidths))) : wrapWidth;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = totalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, totalHeight);
+    ctx.fillStyle = '#000';
+    ctx.textBaseline = 'top';
+
+    let y = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lw = lineWidths[i];
+      let x = 0;
+      if (line.align === 'center') x = Math.max(0, (width - lw) / 2);
+      else if (line.align === 'right') x = Math.max(0, width - lw);
+      for (const t of line.tokens) {
+        ctx.font = fontStr(t.bold, t.size);
+        ctx.fillText(t.text, x, y + (line.height - lineHeightFor(t.size)));
+        x += ctx.measureText(t.text).width;
+      }
+      y += line.height;
+    }
+
+    const imgData = ctx.getImageData(0, 0, width, totalHeight).data;
+    const mono = new Uint8Array(width * totalHeight);
+    for (let i = 0; i < width * totalHeight; i++) {
+      mono[i] = imgData[i * 4] < 180 ? 1 : 0;
+    }
+    return { width, height: totalHeight, mono };
+  }
+
+  function rotate90(bitmap) {
+    const { width, height, mono } = bitmap;
+    const newWidth = height, newHeight = width;
+    const newMono = new Uint8Array(newWidth * newHeight);
+    for (let oy = 0; oy < height; oy++) {
+      for (let ox = 0; ox < width; ox++) {
+        const val = mono[oy * width + ox];
+        if (!val) continue;
+        const nx = height - 1 - oy;
+        const ny = ox;
+        newMono[ny * newWidth + nx] = 1;
+      }
+    }
+    return { width: newWidth, height: newHeight, mono: newMono };
+  }
+
+  // ---------- Image pipeline ----------
+  const imageInput = document.getElementById('imageInput');
+  const imgPreview = document.getElementById('imgPreview');
+  let loadedImage = null;
+
+  imageInput.addEventListener('change', () => {
+    const file = imageInput.files && imageInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        loadedImage = img;
+        imgPreview.src = reader.result;
+        imgPreview.style.display = 'block';
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function rotateImageCanvas(srcCanvas) {
+    const rc = document.createElement('canvas');
+    rc.width = srcCanvas.height;
+    rc.height = srcCanvas.width;
+    const rctx = rc.getContext('2d');
+    rctx.translate(rc.width / 2, rc.height / 2);
+    rctx.rotate(Math.PI / 2);
+    rctx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
+    return rc;
+  }
+
+  function resizeToWidth(srcCanvas, targetWidth) {
+    const scale = targetWidth / srcCanvas.width;
+    const targetHeight = Math.max(1, Math.round(srcCanvas.height * scale));
+    const rc = document.createElement('canvas');
+    rc.width = targetWidth; rc.height = targetHeight;
+    rc.getContext('2d').drawImage(srcCanvas, 0, 0, targetWidth, targetHeight);
+    return rc;
+  }
+
+  function ditherToMono(canvas) {
+    const width = canvas.width, height = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(0, 0, width, height).data;
+    const gray = new Float32Array(width * height);
+    for (let i = 0; i < width * height; i++) {
+      gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+    }
+    const mono = new Uint8Array(width * height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        const old = gray[idx];
+        const newVal = old < 128 ? 0 : 255;
+        mono[idx] = newVal === 0 ? 1 : 0;
+        const err = old - newVal;
+        if (x + 1 < width) gray[idx + 1] += err * 7 / 16;
+        if (x - 1 >= 0 && y + 1 < height) gray[idx - 1 + width] += err * 3 / 16;
+        if (y + 1 < height) gray[idx + width] += err * 5 / 16;
+        if (x + 1 < width && y + 1 < height) gray[idx + width + 1] += err * 1 / 16;
+      }
+    }
+    return { width, height, mono };
+  }
+
+  // ---------- ESC/POS job assembly ----------
+  function packRaster(width, height, mono) {
+    const widthBytes = Math.ceil(width / 8);
+    const data = new Uint8Array(widthBytes * height);
+    for (let y = 0; y < height; y++) {
+      for (let bx = 0; bx < widthBytes; bx++) {
+        let byte = 0;
+        for (let bit = 0; bit < 8; bit++) {
+          const x = bx * 8 + bit;
+          if (x < width && mono[y * width + x]) byte |= (0x80 >> bit);
+        }
+        data[y * widthBytes + bx] = byte;
+      }
+    }
+    return { widthBytes, data };
+  }
+
+  function buildJob(width, height, mono) {
+    const { widthBytes, data } = packRaster(width, height, mono);
+    const header = new Uint8Array([
+      0x1b, 0x40,
+      0x1d, 0x76, 0x30, 0x00,
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+      height & 0xff, (height >> 8) & 0xff,
+    ]);
+    const feed = new Uint8Array([0x0a, 0x0a, 0x0a]);
+    const job = new Uint8Array(header.length + data.length + feed.length);
+    job.set(header, 0);
+    job.set(data, header.length);
+    job.set(feed, header.length + data.length);
+    return job;
+  }
+
+  // ---------- Sending ----------
+  let currentController = null;
+
+  function setSending(sending, printBtn, stopBtn) {
+    printBtn.disabled = sending;
+    stopBtn.hidden = !sending;
+  }
+
+  async function sendJob(job, statusEl, printBtn, stopBtn) {
+    currentController = new AbortController();
+    statusEl.textContent = 'Sending...';
+    statusEl.className = 'status sending';
+    try {
+      const resp = await fetch(`http://${getHost()}/print`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: job,
+        signal: currentController.signal,
+      });
+      if (resp.ok) {
+        statusEl.textContent = 'Sent to printer.';
+        statusEl.className = 'status success';
+      } else {
+        statusEl.textContent = `Failed: HTTP ${resp.status}`;
+        statusEl.className = 'status error';
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        statusEl.textContent = 'Stopped.';
+        statusEl.className = 'status error';
+      } else {
+        statusEl.textContent = 'Failed to reach bridge — check WiFi, or see Settings about HTTPS/mixed content.';
+        statusEl.className = 'status error';
+      }
+    } finally {
+      setSending(false, printBtn, stopBtn);
+      currentController = null;
+    }
+  }
+
+  // ---------- Text tab print ----------
+  const printTextBtn = document.getElementById('printTextBtn');
+  const stopTextBtn = document.getElementById('stopTextBtn');
+  const textStatus = document.getElementById('textStatus');
+  const rotateText = document.getElementById('rotateText');
+
+  printTextBtn.addEventListener('click', async () => {
+    const paragraphs = walkEditor();
+    const hasContent = paragraphs.some(p => p.tokens.some(t => !t.isSpace && t.text.trim().length));
+    if (!hasContent) {
+      textStatus.textContent = 'Nothing to print.';
+      textStatus.className = 'status error';
+      return;
+    }
+    setSending(true, printTextBtn, stopTextBtn);
+    try {
+      let bitmap;
+      if (rotateText.checked) {
+        const pre = renderTextToBitmap(paragraphs, ROTATE_WRAP_BUDGET, 'tight');
+        if (pre.height > PRINTER_WIDTH_DOTS) {
+          textStatus.textContent = 'Too tall for one label at this size — shorten the text or use a smaller size.';
+          textStatus.className = 'status error';
+          setSending(false, printTextBtn, stopTextBtn);
+          return;
+        }
+        bitmap = rotate90(pre);
+      } else {
+        bitmap = renderTextToBitmap(paragraphs, PRINTER_WIDTH_DOTS, 'fixed');
+      }
+      const job = buildJob(bitmap.width, bitmap.height, bitmap.mono);
+      await sendJob(job, textStatus, printTextBtn, stopTextBtn);
+    } catch (e) {
+      textStatus.textContent = 'Error: ' + e.message;
+      textStatus.className = 'status error';
+      setSending(false, printTextBtn, stopTextBtn);
+    }
+  });
+  stopTextBtn.addEventListener('click', () => { if (currentController) currentController.abort(); });
+
+  // ---------- Image tab print ----------
+  const printImageBtn = document.getElementById('printImageBtn');
+  const stopImageBtn = document.getElementById('stopImageBtn');
+  const imageStatus = document.getElementById('imageStatus');
+  const rotateImage = document.getElementById('rotateImage');
+
+  printImageBtn.addEventListener('click', async () => {
+    if (!loadedImage) {
+      imageStatus.textContent = 'Choose an image first.';
+      imageStatus.className = 'status error';
+      return;
+    }
+    setSending(true, printImageBtn, stopImageBtn);
+    try {
+      let canvas = document.createElement('canvas');
+      canvas.width = loadedImage.naturalWidth;
+      canvas.height = loadedImage.naturalHeight;
+      canvas.getContext('2d').drawImage(loadedImage, 0, 0);
+      if (rotateImage.checked) canvas = rotateImageCanvas(canvas);
+      canvas = resizeToWidth(canvas, PRINTER_WIDTH_DOTS);
+      const { width, height, mono } = ditherToMono(canvas);
+      const job = buildJob(width, height, mono);
+      await sendJob(job, imageStatus, printImageBtn, stopImageBtn);
+    } catch (e) {
+      imageStatus.textContent = 'Error: ' + e.message;
+      imageStatus.className = 'status error';
+      setSending(false, printImageBtn, stopImageBtn);
+    }
+  });
+  stopImageBtn.addEventListener('click', () => { if (currentController) currentController.abort(); });
+})();
+</script>
+</body>
+</html>
