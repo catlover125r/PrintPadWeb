@@ -5,274 +5,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#1b1b1f">
 <title>PrintPad</title>
 <style>
-  :root {
-    --bg: #f2f2f5;
-    --panel: #ffffff;
-    --text: #1b1b1f;
-    --muted: #6b6b73;
-    --accent: #2b6ef2;
-    --border: #d9d9df;
-    --danger: #d23b3b;
-    --success: #1f9254;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #15151a;
-      --panel: #1f1f26;
-      --text: #f0f0f5;
-      --muted: #9797a3;
-      --accent: #5b9bff;
-      --border: #33333d;
-      --danger: #ff6b6b;
-      --success: #3ddc84;
-    }
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  .app {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 12px 16px calc(32px + env(safe-area-inset-bottom));
-  }
-  h1 {
-    font-size: 20px;
-    margin: 8px 0 12px;
-    text-align: center;
-  }
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 14px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 4px;
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 10px 0;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 9px;
-  }
-  .tab-btn.active {
-    background: var(--accent);
-    color: #fff;
-  }
+  body { margin: 10px; max-width: 420px; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
-
-  .toolbar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  .tbtn {
-    min-width: 42px;
-    height: 40px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    border-radius: 8px;
-    font-size: 15px;
-  }
-  .tbtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  select.tbtn { -webkit-appearance: none; appearance: none; }
-
-  .rotateRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 6px 2px 10px;
-    font-size: 14px;
-    color: var(--muted);
-  }
-  .rotateRow input { width: 18px; height: 18px; }
-
+  .tab-btn.active { font-weight: bold; text-decoration: underline; }
   .editor {
     width: 384px;
     max-width: 100%;
     min-height: 140px;
-    margin: 0 auto 12px;
-    background: #ffffff;
-    color: #000000;
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    padding: 10px;
-    font-family: -apple-system, Helvetica, Arial, sans-serif;
-    font-size: 20px;
-    line-height: 1.25;
-    outline: none;
-    overflow-wrap: break-word;
+    border: 1px solid;
+    padding: 8px;
   }
-  .editor:empty:before {
-    content: attr(data-placeholder);
-    color: #999;
-    pointer-events: none;
-  }
-  .editor div { min-height: 1em; }
-
-  .imgPreviewWrap {
-    width: 100%;
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin: 10px 0;
-    overflow: hidden;
-  }
+  .editor:empty:before { content: attr(data-placeholder); }
   .imgPreviewWrap img { max-width: 100%; display: block; }
-
-  input[type="file"] {
-    width: 100%;
-    padding: 10px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-  }
-
-  .actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 6px;
-  }
-  .primaryBtn {
-    flex: 1;
-    height: 48px;
-    border: none;
-    border-radius: 10px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 17px;
-    font-weight: 600;
-  }
-  .primaryBtn:disabled { opacity: 0.5; }
-  .stopBtn {
-    height: 48px;
-    padding: 0 20px;
-    border: none;
-    border-radius: 10px;
-    background: var(--danger);
-    color: #fff;
-    font-size: 17px;
-    font-weight: 600;
-  }
-
-  .status {
-    margin-top: 10px;
-    font-size: 14px;
-    min-height: 18px;
-  }
-  .status.success { color: var(--success); }
-  .status.error { color: var(--danger); }
-  .status.sending { color: var(--muted); }
-
-  .settingsPanel label {
-    display: block;
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
-  .settingsPanel input[type="text"] {
-    display: block;
-    width: 100%;
-    margin-top: 6px;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    color: var(--text);
-  }
-  .hint {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-  .secondaryBtn {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    color: var(--text);
-    font-size: 15px;
-    margin-top: 4px;
-  }
+  .status.success { color: green; }
+  .status.error { color: red; }
+  label { display: block; margin: 8px 0; }
 </style>
 </head>
 <body>
-<div class="app">
   <h1>PrintPad</h1>
 
-  <div class="tabs">
+  <nav class="tabs">
     <button class="tab-btn active" data-tab="text">Text</button>
     <button class="tab-btn" data-tab="image">Image</button>
+    <button class="tab-btn" data-tab="camera">Camera</button>
     <button class="tab-btn" data-tab="settings">Settings</button>
-  </div>
+  </nav>
 
   <section id="tab-text" class="tab-panel active">
-    <div class="toolbar">
-      <button id="boldBtn" class="tbtn"><b>B</b></button>
-      <select id="sizeSelect" class="tbtn">
-        <option value="0.5">.5x</option>
-        <option value="1" selected>1x</option>
-        <option value="2">2x</option>
-        <option value="3">3x</option>
-        <option value="4">4x</option>
-      </select>
-      <button id="alignLeftBtn" class="tbtn">Left</button>
-      <button id="alignCenterBtn" class="tbtn">Ctr</button>
-      <button id="alignRightBtn" class="tbtn">Right</button>
-    </div>
-    <label class="rotateRow"><input type="checkbox" id="rotateText"> Rotate (long label, reads down the strip)</label>
+    <button id="boldBtn"><b>B</b></button>
+    <select id="sizeSelect">
+      <option value="0.5">.5x</option>
+      <option value="1" selected>1x</option>
+      <option value="2">2x</option>
+      <option value="3">3x</option>
+      <option value="4">4x</option>
+    </select>
+    <button id="alignLeftBtn">Left</button>
+    <button id="alignCenterBtn">Ctr</button>
+    <button id="alignRightBtn">Right</button>
+    <br>
+    <label><input type="checkbox" id="rotateText"> Rotate (long label, reads down the strip)</label>
     <div id="editor" class="editor" contenteditable="true" data-placeholder="Type here..."></div>
-    <div class="actions">
-      <button id="printTextBtn" class="primaryBtn">Print</button>
-      <button id="stopTextBtn" class="stopBtn" hidden>Stop</button>
-    </div>
+    <button id="printTextBtn">Print</button>
+    <button id="stopTextBtn" hidden>Stop</button>
     <div id="textStatus" class="status"></div>
   </section>
 
   <section id="tab-image" class="tab-panel">
     <input type="file" id="imageInput" accept="image/*">
     <div class="imgPreviewWrap"><img id="imgPreview" style="display:none;"></div>
-    <label class="rotateRow"><input type="checkbox" id="rotateImage"> Rotate 90°</label>
-    <div class="actions">
-      <button id="printImageBtn" class="primaryBtn">Print</button>
-      <button id="stopImageBtn" class="stopBtn" hidden>Stop</button>
-    </div>
+    <label><input type="checkbox" id="rotateImage"> Rotate 90°</label>
+    <br>
+    <button id="printImageBtn">Print</button>
+    <button id="stopImageBtn" hidden>Stop</button>
     <div id="imageStatus" class="status"></div>
   </section>
 
-  <section id="tab-settings" class="tab-panel settingsPanel">
+  <section id="tab-camera" class="tab-panel">
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+    <button id="cameraBtn">Take Photo &amp; Print</button>
+    <div class="imgPreviewWrap"><img id="cameraPreview" style="display:none;"></div>
+    <br>
+    <button id="stopCameraBtn" hidden>Stop</button>
+    <div id="cameraStatus" class="status"></div>
+    <p>Opens your camera, then prints the photo automatically as soon as you take it — no extra tap.</p>
+  </section>
+
+  <section id="tab-settings" class="tab-panel">
     <label>Printer bridge address
       <input type="text" id="hostInput" placeholder="192.168.4.36" autocapitalize="off" autocorrect="off" spellcheck="false">
     </label>
-    <button id="testConnBtn" class="secondaryBtn">Test connection</button>
+    <button id="testConnBtn">Test connection</button>
     <div id="settingsStatus" class="status"></div>
-    <p class="hint">
+    <p>
       Your phone must be on the same WiFi network as the ESP32 printer bridge.
       If "Print" fails with a network/mixed-content error, see the note below.
     </p>
-    <p class="hint">
+    <p>
       This page is served over HTTPS (GitHub Pages), but the printer bridge only speaks plain HTTP
       on your local network. Some mobile browsers block that call for security reasons ("mixed content").
       If printing fails here, open <code>http://&lt;bridge address&gt;/</code> directly in your phone's
@@ -280,7 +93,6 @@
       the HTTPS/HTTP mismatch entirely.
     </p>
   </section>
-</div>
 
 <script>
 (function () {
@@ -325,6 +137,8 @@
   // ---------- Printer constants ----------
   const PRINTER_WIDTH_DOTS = 384;
   const ROTATE_WRAP_BUDGET = 1600; // generous virtual width for rotated-label wrapping
+  const TEXT_FEED_LINES = 3;
+  const PHOTO_FEED_LINES = 8; // extra blank feed after a photo so there's enough bare paper past the tear bar to rip cleanly
   const SIZE_PX = { 0.5: 14, 1: 20, 2: 34, 3: 48, 4: 62 };
   function sizePx(mult) { return SIZE_PX[mult] || SIZE_PX[1]; }
 
@@ -646,7 +460,7 @@
     return { widthBytes, data };
   }
 
-  function buildJob(width, height, mono) {
+  function buildJob(width, height, mono, feedLines) {
     const { widthBytes, data } = packRaster(width, height, mono);
     const header = new Uint8Array([
       0x1b, 0x40,
@@ -654,7 +468,7 @@
       widthBytes & 0xff, (widthBytes >> 8) & 0xff,
       height & 0xff, (height >> 8) & 0xff,
     ]);
-    const feed = new Uint8Array([0x0a, 0x0a, 0x0a]);
+    const feed = new Uint8Array(feedLines || 3).fill(0x0a);
     const job = new Uint8Array(header.length + data.length + feed.length);
     job.set(header, 0);
     job.set(data, header.length);
@@ -731,7 +545,7 @@
       } else {
         bitmap = renderTextToBitmap(paragraphs, PRINTER_WIDTH_DOTS, 'fixed');
       }
-      const job = buildJob(bitmap.width, bitmap.height, bitmap.mono);
+      const job = buildJob(bitmap.width, bitmap.height, bitmap.mono, TEXT_FEED_LINES);
       await sendJob(job, textStatus, printTextBtn, stopTextBtn);
     } catch (e) {
       textStatus.textContent = 'Error: ' + e.message;
@@ -740,6 +554,36 @@
     }
   });
   stopTextBtn.addEventListener('click', () => { if (currentController) currentController.abort(); });
+
+  // ---------- Shared: render an <img> to the printer ----------
+  async function printImageToPrinter(img, rotate, statusEl, printBtn, stopBtn) {
+    setSending(true, printBtn, stopBtn);
+    try {
+      let canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      if (rotate) canvas = rotateImageCanvas(canvas);
+      canvas = resizeToWidth(canvas, PRINTER_WIDTH_DOTS);
+      const { width, height, mono } = ditherToMono(canvas);
+      const job = buildJob(width, height, mono, PHOTO_FEED_LINES);
+      await sendJob(job, statusEl, printBtn, stopBtn);
+    } catch (e) {
+      statusEl.textContent = 'Error: ' + e.message;
+      statusEl.className = 'status error';
+      setSending(false, printBtn, stopBtn);
+    }
+  }
+
+  function loadImageFile(file, onReady) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => onReady(img, reader.result);
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
 
   // ---------- Image tab print ----------
   const printImageBtn = document.getElementById('printImageBtn');
@@ -753,24 +597,30 @@
       imageStatus.className = 'status error';
       return;
     }
-    setSending(true, printImageBtn, stopImageBtn);
-    try {
-      let canvas = document.createElement('canvas');
-      canvas.width = loadedImage.naturalWidth;
-      canvas.height = loadedImage.naturalHeight;
-      canvas.getContext('2d').drawImage(loadedImage, 0, 0);
-      if (rotateImage.checked) canvas = rotateImageCanvas(canvas);
-      canvas = resizeToWidth(canvas, PRINTER_WIDTH_DOTS);
-      const { width, height, mono } = ditherToMono(canvas);
-      const job = buildJob(width, height, mono);
-      await sendJob(job, imageStatus, printImageBtn, stopImageBtn);
-    } catch (e) {
-      imageStatus.textContent = 'Error: ' + e.message;
-      imageStatus.className = 'status error';
-      setSending(false, printImageBtn, stopImageBtn);
-    }
+    await printImageToPrinter(loadedImage, rotateImage.checked, imageStatus, printImageBtn, stopImageBtn);
   });
   stopImageBtn.addEventListener('click', () => { if (currentController) currentController.abort(); });
+
+  // ---------- Camera tab: snap a photo and print immediately ----------
+  const cameraInput = document.getElementById('cameraInput');
+  const cameraBtn = document.getElementById('cameraBtn');
+  const cameraPreview = document.getElementById('cameraPreview');
+  const cameraStatus = document.getElementById('cameraStatus');
+  const stopCameraBtn = document.getElementById('stopCameraBtn');
+
+  cameraBtn.addEventListener('click', () => cameraInput.click());
+
+  cameraInput.addEventListener('change', () => {
+    const file = cameraInput.files && cameraInput.files[0];
+    if (!file) return;
+    loadImageFile(file, async (img, dataUrl) => {
+      cameraPreview.src = dataUrl;
+      cameraPreview.style.display = 'block';
+      await printImageToPrinter(img, false, cameraStatus, cameraBtn, stopCameraBtn);
+      cameraInput.value = '';
+    });
+  });
+  stopCameraBtn.addEventListener('click', () => { if (currentController) currentController.abort(); });
 })();
 </script>
 </body>
