@@ -125,9 +125,8 @@
     el.className = 'status sending';
     try {
       const resp = await fetch(`http://${getHost()}/`, { method: 'GET' });
-      const text = await resp.text();
-      el.textContent = `OK: ${text.trim()}`;
-      el.className = 'status success';
+      el.textContent = resp.ok ? 'OK: bridge reachable.' : `Failed: HTTP ${resp.status}`;
+      el.className = resp.ok ? 'status success' : 'status error';
     } catch (e) {
       el.textContent = 'Failed: ' + (e.message || 'network error');
       el.className = 'status error';
