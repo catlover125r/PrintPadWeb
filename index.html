@@ -151,7 +151,8 @@
   const PRINTER_WIDTH_DOTS = 384;
   const ROTATE_WRAP_BUDGET = 1600; // generous virtual width for rotated-label wrapping
   const TEXT_FEED_LINES = 3;
-  const PHOTO_FEED_LINES = 8; // extra blank feed after a photo so there's enough bare paper past the tear bar to rip cleanly
+  const PHOTO_FEED_LINES = 8;
+  const SHADOW_GAMMA = 2.4; // thermal prints run dark; lifts shadows (picked from a 1.4/1.8/2.4 test print) // extra blank feed after a photo so there's enough bare paper past the tear bar to rip cleanly
   const SIZE_PX = { 0.5: 14, 1: 20, 2: 34, 3: 48, 4: 62 };
   function sizePx(mult) { return SIZE_PX[mult] || SIZE_PX[1]; }
 
@@ -437,7 +438,8 @@
     const data = ctx.getImageData(0, 0, width, height).data;
     const gray = new Float32Array(width * height);
     for (let i = 0; i < width * height; i++) {
-      gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+      const lum = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+      gray[i] = 255 * Math.pow(lum / 255, 1 / SHADOW_GAMMA);
     }
     const mono = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
