@@ -100,11 +100,13 @@
 
   // ---------- Settings ----------
   const hostInput = document.getElementById('hostInput');
-  const DEFAULT_HOST = '192.168.4.36';
+  // When the bridge itself serves this page, always talk back to it.
+  const servedFromBridge = location.protocol === 'http:' && location.hostname !== 'localhost';
+  const DEFAULT_HOST = servedFromBridge ? location.host : '192.168.1.178';
   function getHost() {
     return (hostInput.value || DEFAULT_HOST).trim();
   }
-  hostInput.value = localStorage.getItem('printpad_host') || DEFAULT_HOST;
+  hostInput.value = servedFromBridge ? DEFAULT_HOST : (localStorage.getItem('printpad_host') || DEFAULT_HOST);
   hostInput.addEventListener('input', () => {
     localStorage.setItem('printpad_host', hostInput.value.trim());
   });
@@ -125,14 +127,18 @@
   });
 
   // ---------- Tabs ----------
+  function showTab(name) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`);
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    });
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
+  if (location.hash) showTab(location.hash.slice(1));
 
   // ---------- Printer constants ----------
   const PRINTER_WIDTH_DOTS = 384;
